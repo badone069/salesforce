@@ -1,0 +1,34 @@
+<template >
+    <template if:true={showContainer1}>
+        <div>
+
+            <h2>Select Object</h2>
+            <div style="display: flex; margin-right:1rem;">
+                <input id="input" name="input" list="countries" class="slds-input" onchange={changeFun} type="text" placeholder="Search Object" />
+                <datalist id="countries">
+                     
+                    <template for:each={objList} for:item='item'>
+                        <li key={item}>
+                            <option >{item}</option>
+                        </li>
+                        
+                    </template>
+        
+                </datalist>
+        
+                <lightning-button variant="brand" label="Next" title="Primary action" onclick={handleClick} class="slds-m-left_x-small"></lightning-button>
+            </div>
+            
+          </div>
+    </template>
+      
+
+      <template if:true={showContainer}>
+        <c-file-Uploader search={var1}>
+           
+        </c-file-Uploader>
+       </template>
+      
+
+</template>
+

@@ -1,0 +1,24 @@
+<template>
+    <div class="container">
+        <template for:each={randomlist} for:item="ele">
+            <tr key={ele} style="display: inline-block; border: 1px solid;">
+                <th     
+                        text-align="center"
+                        width="20px"
+                        border-radius="3px"
+                        key={Elements}
+                        style="padding:10px; background-color:#807d7d; border: 1px solid;"
+                        class="Items"
+                        onchange={Change}
+                        draggable="true" 
+                        ondrop={Drop}
+                        ondragstart={DragStart}
+                        ondragover={DragOver}>
+                        {ele}
+                </th>
+            </tr>
+        </template>
+    </div>
+
+    <lightning-button label="Validate Captcha 2" title="Non-primary action" onclick={validateCaptcha} class="slds-m-left_x-small" disabled={buttonss} ></lightning-button>
+</template>

@@ -1,0 +1,21 @@
+<template>
+    <lightning-card title="Record Edit Form Contact" icon-name="standard:contact">
+
+        <div class="slds-m-around_medium">
+   
+            <lightning-record-edit-form
+                object-api-name={objectApiName}
+                record-id={recordId}>
+                <lightning-input-field field-name="Name"></lightning-input-field>
+                <lightning-input-field field-name="Title"></lightning-input-field>
+                <lightning-input-field field-name="Phone"></lightning-input-field>
+                <lightning-input-field field-name="Email"></lightning-input-field>
+                <div class="slds-m-top_medium">
+                    <lightning-button variant="brand" type="submit" name="save" label="Save"></lightning-button>
+                </div>
+            </lightning-record-edit-form>
+
+        </div>
+
+    </lightning-card>
+</template>
