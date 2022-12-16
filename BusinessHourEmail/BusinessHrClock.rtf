@@ -1,0 +1,58 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2636
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 public class BusinessHrClock implements schedulable \{\
+    public void execute(SchedulableContext sc)\{\
+        List<Case> caseList=[SELECT Id,CaseNumber,NoOfHr__c,status,CreatedDate FROM Case Where status='New'];\
+System.debug('caseList Length '+caseList.size());\
+BusinessHours bh = [SELECT Id,mondayEndTime  FROM BusinessHours WHERE IsDefault=true];\
+List<Case> caseToUpdate=new LIst<Case>();\
+Integer fullDayHr=60*60*1000*8;\
+Time endTime=bh.mondayEndTime;\
+DateTime currentDateTime = System.now();\
+Date currentDate = currentDateTime.date();\
+System.debug('endTime '+endTime);\
+for(Case caseObj:caseList)\{\
+    \
+    DateTime startDate=caseObj.CreatedDate;\
+    if(caseObj.NoOfHr__c!=null && caseObj.NoOfHr__c != 0)\{\
+        System.debug('caseObj.NoOfHr__c!=null ');\
+        System.debug('caseObj.NoOfHr__c' +caseObj.NoOfHr__c);\
+        \
+       \
+        caseObj.NoOfHr__c+=fullDayHr;\
+    \}else\{\
+        Boolean isWithin= BusinessHours.isWithin(bh.id, caseObj.CreatedDate);\
+        if(isWithin)\{\
+           \
+            DateTime dt = DateTime.newInstance(currentDate, endTime);\
+            Integer totalTimeInMillis=Integer.valueOf(dt.getTime() - startDate.getTime());\
+            Integer total=totalTimeInMillis<0?(-1*totalTimeInMillis):totalTimeInMillis;\
+            System.debug('total' +total);\
+            \
+            caseObj.NoOfHr__c=total;\
+        \}else\{\
+           System.debug('deepak');\
+            caseObj.NoOfHr__c=fullDayHr;\
+            \
+        \}\
+    \}\
+    case cObj=new Case();\
+    cObj.Id=caseObj.Id;\
+    cObj.NoOfHr__c= caseObj.NoOfHr__c;\
+    \
+    caseToUpdate.add(cObj);\
+\}\
+\
+System.debug('caseToUpdate '+caseToUpdate);\
+\
+        \
+        if(caseToUpdate.size()>0)\
+            update caseToUpdate;\
+        \
+    \}\
+\}}

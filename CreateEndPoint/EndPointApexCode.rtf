@@ -1,0 +1,266 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2636
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww28600\viewh18000\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 @RestResource(urlMapping='/cpd/*')\
+global with sharing class MyRestResource \{\
+    \
+    @HttpDelete\
+    global static string doDelete() \{\
+        RestRequest req = RestContext.request;\
+        Map<String,Object> response = new Map<String,Object>();\
+        \
+        try\{\
+            String cpdId = req.requestURI.substring(req.requestURI.lastIndexOf('/')+1);\
+            CPD_Detail__c cpd = [SELECT Id FROM CPD_Detail__c WHERE Id = :cpdId];\
+            delete cpd;\
+            response.put('error',false);\
+            response.put('message','cpd record deleted');\
+            return JSON.serialize(response);\
+        \}catch(Exception e)\{\
+            System.debug('Error '+e.getMessage());\
+        \}\
+        response.put('error',true);\
+        response.put('message','error occured on cpd record deletion(Check The RecordId and URL)');\
+        return JSON.serialize(response);\
+    \}\
+    \
+    \
+    \
+    @HttpGet\
+    global static string doGet() \{\
+        RestResponse res = RestContext.response;\
+        RestRequest req = RestContext.request;\
+        Map<String,Object> response = new Map<String,Object>();\
+        try\{\
+            set<id> contentDocumentLinkIdSet = new set<id>();\
+            String cpdId = req.requestURI.substring(req.requestURI.lastIndexOf('/')+1);\
+            List<ContentDocumentLink> condocLick=[SELECT ContentDocumentId FROM ContentDocumentLink WHERE LinkedEntityId =: cpdId];\
+            System.debug('condocLick' + condocLick);\
+            \
+            for(ContentDocumentLink c:condocLick)\{\
+                contentDocumentLinkIdSet.add(c.ContentDocumentId);\
+            \}\
+            \
+            List<ContentVersion> cvData=[Select Id, VersionData from ContentVersion where ContentDocumentId IN: contentDocumentLinkIdSet];\
+            System.debug('cv'+cvData);\
+           // Map<String,Blob> resultMap=new Map<String,Blob>();\
+            List<Blob> result=new List<Blob>();\
+            Integer i=1;\
+            for(ContentVersion cv:cvData)   \{\
+                result.add(cv.VersionData);\
+                //resultMap.put(i++,cv.VersionData);\
+            \}         \
+           // CPD_Detail__c result = [SELECT FIELDS(STANDARD),(SELECT  ContentDocumentId, LinkedEntityId  FROM ContentDocumentLinks) FROM CPD_Detail__c WHERE Id = :cpdId LIMIT 200];\
+          \
+            response.put('error',false);\
+            response.put('message','cpd record');\
+            return JSON.serialize(result);\
+        \}catch(Exception e)\{\
+            System.debug('error '+e.getMessage());\
+        \}\
+        response.put('error',true);\
+        response.put('message','error in fetching record(Check The RecordId and URL)');\
+        return JSON.serialize(response);\
+    \}\
+   \
+    \
+    /*\
+    @HttpGet\
+    \
+       global static string doGet() \{\
+        switch on RestContext.request.requestURI.substringAfterLast('/') \{\
+            when 'getFile' \{ return doGetFile();\}\
+            when 'getRecord' \{ return dogetRecord(); \}\
+            \
+            when else \{ return doInvalidCall(); \}\
+        \}\
+    \}\
+   \
+    global static String doGetFile()\{\
+        RestResponse res = RestContext.response;\
+        RestRequest req = RestContext.request;\
+        Map<String,Object> response = new Map<String,Object>();\
+        Map<String,String> HeaderMap = req.headers;\
+        try\{\
+            String cpdId = HeaderMap.get('Id');\
+            set<id> contentDocumentLinkIdSet = new set<id>();\
+            List<ContentDocumentLink> condocLick=[SELECT ContentDocumentId FROM ContentDocumentLink WHERE LinkedEntityId =: cpdId];\
+            System.debug('condocLick' + condocLick);\
+            \
+            for(ContentDocumentLink c:condocLick)\{\
+                contentDocumentLinkIdSet.add(c.ContentDocumentId);\
+            \}\
+            \
+            List<ContentVersion> cvData=[Select Id, VersionData from ContentVersion where ContentDocumentId IN: contentDocumentLinkIdSet];\
+            System.debug('cv'+cvData);\
+           // Map<String,Blob> resultMap=new Map<String,Blob>();\
+            List<Blob> result=new List<Blob>();\
+            Integer i=1;\
+            for(ContentVersion cv:cvData)   \{\
+                result.add(cv.VersionData);\
+                //resultMap.put(i++,cv.VersionData);\
+            \}         \
+           // CPD_Detail__c result = [SELECT FIELDS(STANDARD),(SELECT  ContentDocumentId, LinkedEntityId  FROM ContentDocumentLinks) FROM CPD_Detail__c WHERE Id = :cpdId LIMIT 200];\
+          \
+            response.put('error',false);\
+            response.put('message','cpd record');\
+            return JSON.serialize(result);\
+        \}catch(Exception e)\{\
+            System.debug('error '+e.getMessage());\
+        \}\
+        response.put('error',true);\
+        response.put('message','error in fetching record(Check The RecordId and URL)');\
+        return JSON.serialize(response);\
+    \}\
+    \
+    \
+    global static String dogetRecord()\{\
+         RestRequest req = RestContext.request;\
+        Map<String,Object> response = new Map<String,Object>();\
+        Map<String,String> HeaderMap = req.headers;\
+        try\{\
+            \
+            String cpdId = HeaderMap.get('Id');\
+            CPD_Detail__c result = [SELECT FIELDS(STANDARD),(SELECT  ContentDocumentId, LinkedEntityId  FROM ContentDocumentLinks) FROM CPD_Detail__c WHERE Id = :cpdId LIMIT 200];\
+          \
+            response.put('error',false);\
+            response.put('message','cpd record');\
+            return JSON.serialize(result);\
+        \}catch(Exception e)\{\
+            System.debug('error '+e.getMessage());\
+        \}\
+        response.put('error',true);\
+        response.put('message','error in fetching record(Check The RecordId and URL)');\
+        return JSON.serialize(response);\
+    \}  */\
+    \
+    @HttpPost\
+    global static String doPost() \{\
+        switch on RestContext.request.requestURI.substringAfterLast('/') \{\
+            when 'createCpdRecord' \{ return doCpdDetail();\}\
+            when 'updateCpdRecord' \{ return doCpdDetailFileUpdate(); \}\
+            \
+            when else \{ return doInvalidCall(); \}\
+        \}\
+    \}\
+    \
+    global static String doCpdDetail()\{\
+        Map<String,Object> response = new Map<String,Object>();\
+        RestRequest req = RestContext.request;\
+        Map<String,String> ParamsMap = req.params;\
+        Map<String,String> HeaderMap = req.headers;\
+        blob body = req.requestBody;\
+        boolean message = false;\
+        System.debug('body. '+body);\
+        System.debug('params  '+ParamsMap);\
+        System.debug('HeaderMap '+HeaderMap);\
+        try\{\
+            CPD_Detail__c results = (CPD_Detail__c)JSON.deserialize(JSON.serialize(ParamsMap), CPD_Detail__c.class);\
+            insert results;\
+            \
+            String messageToShow='';\
+            if(HeaderMap.get('fileName') != null && body.size() > 0)\{\
+                message = true;\
+                contentversion cv = new contentversion();\
+                cv.PathOnClient = HeaderMap.get('fileName');\
+                cv.FirstPublishLocationId = results.Id;\
+                cv.VersionData = body;\
+                insert cv;\
+                response.put('error',false);\
+                response.put('message','cpd record created successfully and file associated');\
+                \
+                \
+            \}else\{\
+                \
+                if(HeaderMap.get('fileName') == null && body.size() > 0)\{\
+                    message = true;\
+                    contentversion cv = new contentversion();\
+                    cv.PathOnClient = 'HealthCert.pdf';\
+                    cv.FirstPublishLocationId = results.Id;\
+                    cv.VersionData = body;\
+                    insert cv;\
+                    response.put('error',false);\
+                    response.put('message','cpd record created successfully and file associated');\
+                    \
+                    \
+                    \
+                \}\
+            \}\
+            if(!message)\{\
+                response.put('error',false);\
+                response.put('message','cpd record created');\
+            \}\
+            \
+            \
+            \
+            return JSON.serialize(response);\
+        \}catch(Exception e)\{\
+            System.debug('error '+e.getMessage());\
+        \}\
+        response.put('error',true);\
+        response.put('message','error occur while inserting(Check The Account__c(Required Field) and URL)');\
+        return JSON.serialize(response);\
+    \}\
+    \
+    \
+    global static string doCpdDetailFileUpdate()\{\
+        RestRequest req = RestContext.request;\
+        Map<String,Object> response = new Map<String,Object>();\
+        Map<String,String> ParamsMap = req.params;\
+        Map<String,String> HeaderMap = req.headers;\
+        String messageToShow ='';\
+        try\{\
+            String cpdId=HeaderMap.get('Id');\
+            blob body = req.requestBody;\
+            System.debug('body And accountId ===>'+body +' And '+cpdId);\
+            if(body.size() > 0)\{\
+                System.debug('Body not null');\
+            \}\
+            System.debug('file name ' +HeaderMap.get('fileName'));\
+            CPD_Detail__c result = [SELECT Id FROM CPD_Detail__c WHERE Id = :cpdId];\
+            CPD_Detail__c results = (CPD_Detail__c)JSON.deserialize(JSON.serialize(ParamsMap), CPD_Detail__c.class);\
+            results.Id = result.Id;\
+            update results;\
+            \
+            if(HeaderMap.get('fileName') != null && body.size() > 0)\{\
+                contentversion cv = new contentversion();\
+                cv.PathOnClient = HeaderMap.get('fileName');\
+                cv.FirstPublishLocationId = results.Id;\
+                cv.VersionData = body;\
+                insert cv;\
+                messageToShow='cpd  file associated successfully';\
+                \
+            \}else\{\
+                if(HeaderMap.get('fileName') == null && body.size() > 0)\{\
+                    contentversion cv = new contentversion();\
+                    cv.PathOnClient = 'HealthCert.pdf';\
+                    cv.FirstPublishLocationId = results.Id;\
+                    cv.VersionData = body;\
+                    insert cv;\
+                    messageToShow='cpd  file associated successfully';\
+                    \
+                \}else\{\
+                    messageToShow='cpd Record updated successfully';\
+                \}\
+            \}\
+            \
+            response.put('error',false);\
+            response.put('message',messageToShow);\
+            return JSON.serialize(response);\
+        \}catch(Exception e)\{\
+            System.debug('error '+e.getMessage());\
+        \}\
+        response.put('error',true);\
+        response.put('message','error in Updating record(Check the recordId And Url)');\
+        return JSON.serialize(response);\
+        \
+    \}\
+    \
+    global static string doInvalidCall()\{\
+        return 'Error : Check The URL';\
+    \}\
+\}}

@@ -1,0 +1,281 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2636
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 @IsTest\
+public class TestMyRestResource \{\
+    @testSetup\
+    static void createdata()\{\
+        Account acc1 = new Account();\
+        acc1.name = 'PositiveTestAccount';\
+        insert acc1;\
+    \}\
+    \
+    @isTest static void testGet() \{\
+        Id recordId = createTestRecord();\
+        System.debug('recordId' + recordId);\
+        // Set up a test request\
+        RestRequest request = new RestRequest();\
+        request.requestUri ='https://healthcert--7peaks.my.salesforce.com/services/apexrest/cpd/' + recordId;\
+        request.httpMethod = 'GET';\
+        request.addHeader('Content-Type', 'application/json');\
+        request.addHeader('Accept', 'application/json');\
+        \
+        RestContext.request = request;\
+        // Call the method to test\
+        String response=MyRestResource.doGet();\
+        \
+    \} \
+    /*\
+    @isTest static void testGet() \{\
+        Id recordId = createTestRecord();\
+        System.debug('recordId' + recordId);\
+        // Set up a test request\
+        RestRequest request = new RestRequest();\
+        request.requestUri ='https://healthcert--7peaks.my.salesforce.com/services/apexrest/cpd/getRecord';\
+        request.httpMethod = 'GET';\
+        request.addHeader('Content-Type', 'application/json');\
+        request.addHeader('Accept', 'application/json');\
+        request.addHeader('Id', 'recordId');\
+        \
+        RestContext.request = request;\
+        // Call the method to test\
+        String response=MyRestResource.doGet();\
+        \
+    \} */\
+    \
+    @isTest static void testGet2() \{\
+        Account acc = [Select id,name from Account Where Name = 'PositiveTestAccount' ];\
+        Id recordId = acc.Id;\
+        System.debug('recordId' + recordId);\
+        // Set up a test request\
+        RestRequest request = new RestRequest();\
+        request.requestUri =\
+            'https://healthcert--7peaks.my.salesforce.com/services/apexrest/cpd/'\
+            + recordId;\
+        request.httpMethod = 'GET';\
+        request.addHeader('Content-Type', 'application/json');\
+        request.addHeader('Accept', 'application/json');\
+        \
+        RestContext.request = request;\
+        // Call the method to test\
+        String response=MyRestResource.doGet();\
+    \}\
+    \
+    \
+    @isTest static void testdoDelete() \{\
+        Id recordId = createTestRecord();\
+        System.debug('recordId' + recordId);\
+        // Set up a test request\
+        RestRequest request = new RestRequest();\
+        request.requestUri =\
+            'https://healthcert--7peaks.my.salesforce.com/services/apexrest/cpd/'\
+            + recordId;\
+        request.httpMethod = 'DELETE';\
+        request.addHeader('Content-Type', 'application/json');\
+        request.addHeader('Accept', 'application/json');\
+        \
+        \
+        RestContext.request = request;\
+        // Call the method to test\
+        String response=MyRestResource.doDelete();\
+        \
+    \}\
+    \
+    @isTest static void NegativetestdoDelete() \{\
+        Account acc = [Select id,name from Account Where Name = 'PositiveTestAccount' ];\
+        Id recordId = acc.Id;\
+        System.debug('recordId' + recordId);\
+        // Set up a test request\
+        RestRequest request = new RestRequest();\
+        request.requestUri =\
+            'https://healthcert--7peaks.my.salesforce.com/services/apexrest/cpd/'\
+            + recordId;\
+        request.httpMethod = 'DELETE';\
+        request.addHeader('Content-Type', 'application/json');\
+        request.addHeader('Accept', 'application/json');\
+        \
+        \
+        RestContext.request = request;\
+        // Call the method to test\
+        String response=MyRestResource.doDelete();\
+        \
+    \}\
+    \
+    @isTest static void testdoPostcreateCpdRecord1() \{\
+        Account acc = [Select id,name from Account Where Name = 'PositiveTestAccount' ];\
+        String text='ANand';\
+        blob b=blob.toPdf(text);\
+        System.debug('b' + b);\
+        \
+        \
+        \
+        RestRequest request1 = new RestRequest();\
+        request1.requestUri ='https://healthcert--7peaks.my.salesforce.com/services/apexrest/cpd/createCpdRecord' ;\
+        request1.httpMethod = 'POST';\
+        request1.addHeader('Content-Type','application/json');\
+        request1.addHeader('Accept','application/json');\
+        request1.requestBody=blob.toPdf(text);\
+        System.debug('b' + b);\
+        request1.addHeader('fileName','dpk.pdf');\
+        request1.addParameter('Account__c', acc.Id);\
+        \
+        RestContext.request = request1;\
+        String response1=MyRestResource.doPost();\
+        \
+        \
+    \}\
+    \
+    @isTest static void testdoPostcreateCpdRecordError() \{\
+        Id recordId = createTestRecord();\
+        // Set up a test request\
+        String text='ANand';\
+        blob b=blob.toPdf(text);\
+        \
+        RestRequest request1 = new RestRequest();\
+        request1.requestUri ='https://healthcert--7peaks.my.salesforce.com/services/apexrest/cpd/createCpdRecord' ;\
+        request1.httpMethod = 'POST';\
+        request1.addHeader('Content-Type','application/json');\
+        request1.addHeader('Accept','application/json');\
+        request1.requestBody=blob.toPdf(text);\
+        request1.addHeader('fileName','dpk.pdf');\
+        request1.addParameter('Account__c', recordId);\
+        \
+        RestContext.request = request1;\
+        String response1=MyRestResource.doPost();\
+        \
+        \
+    \}\
+    \
+    @isTest static void testdoPostcreateCpdRecord2() \{\
+        Account acc = [Select id,name from Account Where Name = 'PositiveTestAccount' ];\
+        String text='ANand';\
+        blob b=blob.toPdf(text);\
+        \
+        test.startTest();\
+        RestRequest request = new RestRequest();\
+        request.requestUri ='https://healthcert--7peaks.my.salesforce.com/services/apexrest/cpd/createCpdRecord';\
+        request.httpMethod = 'POST';\
+        request.addHeader('Content-Type', 'application/json');\
+        request.addHeader('Accept', 'application/json');\
+        request.requestBody=b;\
+        request.addParameter('Account__c', acc.Id);\
+        RestContext.request = request;\
+        String response=MyRestResource.doPost();\
+        \
+    \}\
+    \
+    \
+    @isTest static void testdoCpdDetailFileUpdate()\{\
+        Account acc = [Select id,name from Account Where Name = 'PositiveTestAccount' ];\
+        Id recordId = createTestRecord();\
+        String text='ANand';\
+        blob b=blob.toPdf(text);\
+        \
+        test.startTest();\
+        RestRequest request = new RestRequest();\
+        request.requestUri ='https://healthcert--7peaks.my.salesforce.com/services/apexrest/cpd/updateCpdRecord';\
+        request.httpMethod = 'POST';\
+        request.addHeader('Content-Type', 'application/json');\
+        request.addHeader('Accept', 'application/json');\
+        request.requestBody=b;\
+        request.addParameter('Account__c',acc.Id );\
+        request.addHeader('Id', recordId);\
+        request.addHeader('fileName', 'dpk.pdf');\
+        RestContext.request = request;\
+        String response=MyRestResource.doPost();\
+    \} \
+    \
+    @isTest static void testdoCpdDetailFileUpdate2()\{\
+        Account acc = [Select id,name from Account Where Name = 'PositiveTestAccount' ];\
+        Id recordId = createTestRecord();\
+        String text='ANand';\
+        blob b=blob.toPdf(text);\
+        \
+        test.startTest();\
+        RestRequest request = new RestRequest();\
+        request.requestUri ='https://healthcert--7peaks.my.salesforce.com/services/apexrest/cpd/updateCpdRecord';\
+        request.httpMethod = 'POST';\
+        request.addHeader('Content-Type', 'application/json');\
+        request.addHeader('Accept', 'application/json');\
+        request.requestBody=b;\
+        request.addParameter('Account__c',acc.Id );\
+        request.addHeader('Id', recordId);\
+        //request.addHeader('fileName', 'dpk.pdf');\
+        RestContext.request = request;\
+        String response=MyRestResource.doPost();\
+    \} \
+    \
+    @isTest static void testdoCpdDetailFileUpdateError()\{\
+        Account acc = [Select id,name from Account Where Name = 'PositiveTestAccount' ];\
+        String text='ANand';\
+        blob b=blob.toPdf(text);\
+        \
+        test.startTest();\
+        RestRequest request = new RestRequest();\
+        request.requestUri ='https://healthcert--7peaks.my.salesforce.com/services/apexrest/cpd/updateCpdRecord';\
+        request.httpMethod = 'POST';\
+        request.addHeader('Content-Type', 'application/json');\
+        request.addHeader('Accept', 'application/json');\
+        request.requestBody=b;\
+        //request.addParameter('Account__c',recordId );\
+        request.addHeader('Id', acc.Id);\
+        request.addHeader('fileName', 'dpk.pdf');\
+        RestContext.request = request;\
+        String response=MyRestResource.doPost();\
+    \} \
+    \
+    @isTest static void testdoCpdDetailFileUpdateError2()\{\
+        Account acc = [Select id,name from Account Where Name = 'PositiveTestAccount' ];\
+        //Id recordId = createTestRecord();\
+        String text='ANand';\
+        blob b=blob.toPdf(text);\
+        \
+        test.startTest();\
+        RestRequest request = new RestRequest();\
+        request.requestUri ='https://healthcert--7peaks.my.salesforce.com/services/apexrest/cpd/updateCpdRecord';\
+        request.httpMethod = 'POST';\
+        request.addHeader('Content-Type', 'application/json');\
+        request.addHeader('Accept', 'application/json');\
+        request.addHeader('Id', acc.Id);\
+        request.addHeader('fileName', 'dpk.pdf');\
+        RestContext.request = request;\
+        String response=MyRestResource.doPost();\
+    \} \
+    \
+    @isTest static void testError()\{\
+        Account acc = [Select id,name from Account Where Name = 'PositiveTestAccount' ];\
+        Id recordId = createTestRecord();\
+        String text='ANand';\
+        blob b=blob.toPdf(text);\
+        \
+        test.startTest();\
+        RestRequest request = new RestRequest();\
+        request.requestUri ='https://healthcert--7peaks.my.salesforce.com/services/apexrest/cpd/';\
+        request.httpMethod = 'POST';\
+        request.addHeader('Content-Type', 'application/json');\
+        request.addHeader('Accept', 'application/json');\
+        request.requestBody=b;\
+        request.addParameter('Account__c',acc.Id );\
+        request.addHeader('Id', recordId);\
+        RestContext.request = request;\
+        String response=MyRestResource.doPost();\
+    \} \
+    \
+    //Helper Method\
+    \
+    public static Id createTestRecord() \{\
+        Account acc = new Account();\
+        acc.name = 'TestAccount';\
+        insert acc;\
+        // Create test record\
+        CPD_Detail__c cpdTest = new CPD_Detail__c(\
+            Account__c = acc.Id  \
+        );\
+        insert cpdTest;\
+        return cpdTest.Id;\
+    \}      \
+\}}
