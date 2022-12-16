@@ -1,0 +1,311 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2636
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 public without sharing class LeadAction \{\
+    public static void CustomLeadConvert(List<Lead> newLeadList)\{\
+        Set < Id > setAccountIds = new Set < Id >();\
+        Set < Id > setContactIds = new Set < Id >();\
+        Set<Id> conIdSet=new Set<Id>();\
+        Set < Id > setOppIds = new Set < Id >();\
+        set<Id> ConvertedLeadIds = new Set<Id>();\
+        Map<Id,Id> AccountMap = new Map<Id,Id>();\
+        Map<Id,Id> contactAccountIdMap=new Map<Id,Id>();\
+        Map<Id,String> AccountRecordTypeMap = new Map<Id,String>();\
+        Map<Id,Id> leadAccountIdMap=new Map<Id,Id>();\
+        Map<Id,String> leadMarketingStatusMap=new Map<Id,String>();\
+        LeadStatus CLeadStatus= [SELECT Id, MasterLabel FROM LeadStatus WHERE  IsConverted=true Limit 1];  \
+        List<Database.LeadConvert> MassLeadconvert = new List<Database.LeadConvert>();\
+        \
+        for(Lead currentlead : newLeadList )\{\
+            Database.LeadConvert Leadconvert = new Database.LeadConvert();\
+            Leadconvert.setLeadId ( currentlead.id );                \
+            Leadconvert.setConvertedStatus(CLeadStatus.MasterLabel);\
+            //Leadconvert.setDoNotCreateOpportunity(TRUE); \
+            //you can remove this line if you want to create an opportunity during  conversion \
+            MassLeadconvert.add(Leadconvert);\
+        \}\
+        \
+        if (!MassLeadconvert.isEmpty()) \{\
+            List<Database.LeadConvertResult> lcrList = Database.convertLead(MassLeadconvert);\
+            for(Database.LeadConvertResult lcr:lcrList)\{\
+                if(lcr.isSuccess())\{\
+                    ConvertedLeadIds.add(lcr.getLeadId());\
+                \}\
+            \}\
+        \}\
+        \
+        \
+        \
+       \
+        //getting record Id of VATM recordType.\
+        Id vATMRecordTypeIdLead= Schema.SObjectType.Lead.getRecordTypeInfosByName().get('VATM').getRecordTypeId();\
+        List<Lead> leadList = [SELECT Id, IsConverted,ConvertedAccountId,Marketing_Status__c,ConvertedContactId,ConvertedOpportunityId,recordtype.Name,recordtypeId FROM Lead WHERE Id IN :ConvertedLeadIds];\
+        \
+        for(Lead objLead:leadList)\{\
+            if ( objLead.IsConverted && objLead.recordtypeId==vATMRecordTypeIdLead)\{\
+                contactAccountIdMap.put(objLead.ConvertedContactId,objLead.ConvertedAccountId);\
+                leadAccountIdMap.put(objLead.ConvertedAccountId,objLead.Id);\
+                leadMarketingStatusMap.put(objLead.ConvertedAccountId,objLead.Marketing_Status__c);\
+                setAccountIds.add( objLead.ConvertedAccountId );            \
+                setContactIds.add(objLead.ConvertedContactId);\
+                setOppIds.add(objLead.ConvertedOpportunityId);\
+            \}\
+            \
+        \}\
+        system.debug('leadMarketingStatusMap ==>'+leadMarketingStatusMap);\
+        \
+        List < Account > listAcctForUpdate = new List < Account >();\
+        List < Contact > listConForUpdate = new List < Contact >();\
+        List<Opportunity>   listOppForUpdate =new List<Opportunity>();\
+        if ( setAccountIds.size() > 0 ) \{\
+            Id vATMRecordTypeId = Schema.SObjectType.Account.getRecordTypeInfosByName().get('VATM').getRecordTypeId();        \
+            /* Fetching the accounts which are created as part of lead conversion and record type is not VATM */\
+            for ( Account objAccount : [ SELECT Id, RecordTypeId FROM Account WHERE Id IN: setAccountIds] ) \{\
+                /* Setting the Record Type Id to Account's VATM Record Type Id */\
+                if(objAccount.RecordTypeId!=vATMRecordTypeId)\{\
+                     listAcctForUpdate.add( new Account( Id = objAccount.Id, RecordTypeId = vATMRecordTypeId)) ;\
+                    //listAcctForUpdate.add( new Account( Id = objAccount.Id, RecordTypeId = vATMRecordTypeId,Marketing_Status__pc=leadMarketingStatusMap.get(objAccount.Id))) ;\
+                    \
+                \}\
+                \
+            \}\
+        \}\
+        \
+         if ( listAcctForUpdate.size() > 0 )\{\
+            try\{\
+                update listAcctForUpdate;\
+            \}catch(DmlException e) \{\
+                System.debug('The following exception has occurred: ' + e.getMessage());\
+            \}\
+        \}\
+        \
+        if ( setOppIds.size() > 0 ) \{\
+            Id vATMRecordTypeId = Schema.SObjectType.Opportunity.getRecordTypeInfosByName().get('VATM').getRecordTypeId();        \
+            /* Fetching the accounts which are created as part of lead conversion and record type is not VATM */\
+            for ( Opportunity objOpp : [ SELECT Id, RecordTypeId FROM Opportunity WHERE Id IN: setOppIds] ) \{\
+                /* Setting the Record Type Id to Account's VATM Record Type Id */\
+                if(objOpp.RecordTypeId!=vATMRecordTypeId)\{\
+                    listOppForUpdate.add( new Opportunity( Id = ObjOpp.Id, RecordTypeId = vATMRecordTypeId ) );\
+                    \
+                \}\
+            \}\
+        \}\
+        \
+        if(listOppForUpdate.size()>0)\{\
+            try\{\
+                update listOppForUpdate;\
+            \}\
+            catch(DmlException e) \{\
+                System.debug('The following exception has occurred: ' + e.getMessage());\
+            \}\
+        \}\
+        \
+        \
+        if ( setContactIds.size() > 0 ) \{\
+           Id vATMRecordTypeId = Schema.SObjectType.Contact.getRecordTypeInfosByName().get('VATM').getRecordTypeId();        \
+             /*Fetching the accounts which are created as part of lead conversion and record type is not VATM */\
+             for ( Contact objCon : [ SELECT Id, RecordTypeId FROM Contact WHERE Id IN: setContactIds ] ) \{\
+                /* Setting the Record Type Id to Contact VATM Record Type Id */\
+             /* if(objCon.RecordTypeId!=vATMRecordTypeId)\{\
+                    conIdSet.add(objCon.Id);\
+                    listConForUpdate.add( new Contact( Id = ObjCon.Id,RecordTypeId = vATMRecordTypeId) );\
+                \} */\
+                 \
+                 System.debug('contactAccountIdMap.get(ObjCon.Id)' + contactAccountIdMap.get(ObjCon.Id));\
+                 listConForUpdate.add( new Contact( Id = ObjCon.Id,RecordTypeId = vATMRecordTypeId, AccountId=contactAccountIdMap.get(ObjCon.Id)) );\
+               \
+           \}\
+        \}\
+        \
+          \
+       if(listConForUpdate.size()>0)\{\
+            try\{\
+                update listConForUpdate;\
+                System.debug('listAcctForUpdate '+listConForUpdate);\
+                \
+            \}catch(DmlException e) \{\
+                System.debug('The following exception has occurred: ' + e.getMessage());\
+            \}\
+        \}\
+        \
+\
+   \
+       // List<Contact> conList=[Select Id,RecordTypeId From Contact Where Id IN:conIdSet];\
+        System.debug('listAcctForUpdate '+listAcctForUpdate);\
+        System.debug('listOppForUpdate '+listOppForUpdate);\
+        System.debug('listConForUpdate '+listConForUpdate);\
+       /* for(Contact conObj:conList)\{\
+            Id vATMRecordTypeId = Schema.SObjectType.Contact.getRecordTypeInfosByName().get('VATM').getRecordTypeId();  \
+            listConForUpdate.add(new Contact( Id = conObj.Id, RecordTypeId = vATMRecordTypeId ));\
+        \}*/\
+        \
+        \
+              \
+       \
+        \
+        \
+        \
+        \
+      // Deepak  \
+      system.debug('from here :');\
+        system.debug(' convet lead ids : '+ConvertedLeadIds);\
+        system.debug(' setAccountIds : '+setAccountIds);\
+     List<Lead> getrecordLead =[SELECT Id, ConvertedContactId, ConvertedOpportunityId, ConvertedAccountId, DOB__c, Payor__c, Name,pi__comments__c,Marketing_Status__c FROM Lead Where Id IN:ConvertedLeadIds];\
+     List<Account> getRecordAccount =[SELECT Id, Aliases__pc, Available_Phone__pc,Complete_Mailing_Address__pc, Name FROM Account Where Id IN:setAccountIds];\
+     system.debug('list of lead :'+getrecordLead);\
+        system.debug('list of lead :'+getRecordAccount);\
+      \
+        List<Total_Cash_Flow__c> tcfCash = new List<Total_Cash_Flow__c>();\
+        List<ContactTCF_Link__c> ConTcf = new List<ContactTCF_Link__c>();\
+        List<Lookup_Account__c>  LookupAccount = new List<Lookup_Account__c>();\
+        List<DealTCF_Link__c>  DealTcf = new List<DealTCF_Link__c>();\
+        List<Research__c> Rsch = new List<Research__c>();\
+        List<Account> updateAccount = new List<Account>();\
+        Map<Id,Id> accountTotalCashFlowIdMap=new Map<Id,Id>(); \
+         Map<Id,Id> leadTotalCashFlowIdMap=new Map<Id,Id>(); \
+        Map<Id,Boolean> leadAccountConditionMap=new Map<Id,Boolean>();\
+        \
+        System.debug('leadAccountIdMap ===>'+leadAccountIdMap);\
+        for(Account acc:getRecordAccount)\{\
+            if( acc.Available_Phone__pc == 'No' && acc.Complete_Mailing_Address__pc == 'No')\{\
+                leadAccountConditionMap.put(leadAccountIdMap.get(acc.id),true);\
+            \}\
+        \}\
+        \
+       \
+        for(Lead l:getrecordLead)\{\
+           System.debug('l.Payor__c '+l.Payor__c);\
+            Total_Cash_Flow__c tcf = new Total_Cash_Flow__c();\
+                          tcf.Name = l.name;\
+                          tcf.Payor__c = l.Payor__c;\
+                         tcfCash.add(tcf);\
+                       \
+                      \
+            \
+        \}\
+       \
+       insert tcfCash;\
+        \
+      \
+       /* for(Total_Cash_Flow__c totalCashFlowObj:totalCashFlowList)\{\
+            accountTotalCashFlowIdMap.put(totalCashFlowObj.Payor__c,totalCashFlowObj.Id);\
+        \}*/\
+        \
+       \
+       for(Lead l:getrecordLead)\{\
+            for(Total_Cash_Flow__c t:tcfCash)\{\
+            ContactTCF_Link__c ConTcfLink = new ContactTCF_Link__c();\
+                          ConTcfLink.Contact__c = l.ConvertedContactId;\
+                          ConTcfLink.Total_Cash_Flow__c = t.id;\
+						  ConTcf.add(ConTcfLink) ;    \
+            \}\
+        \}\
+        /*for(Lead l:getrecordLead)\{\
+             ContactTCF_Link__c ConTcfLink = new ContactTCF_Link__c();\
+                          ConTcfLink.Contact__c = l.ConvertedContactId;\
+            System.debug('leadTotalCashFlowIdMap.get(l.Id) ==> '+leadTotalCashFlowIdMap.get(l.Id));\
+                          ConTcfLink.Total_Cash_Flow__c = leadTotalCashFlowIdMap.get(l.Id);\
+						  ConTcf.add(ConTcfLink) ; \
+        \}*/\
+        try\{\
+           insert ConTcf; \
+        \}catch(Exception e)\{\
+            System.debug('error==> '+e.getMessage());\
+        \}\
+\
+        \
+        for(Lead l:getrecordLead)\{\
+        Lookup_Account__c LookupAcc = new Lookup_Account__c();\
+                          LookupAcc.Account__c = l.ConvertedAccountId;\
+        				  LookupAcc.Name = l.Name;\
+        				  LookupAcc.Aliases__c = l.Name;\
+            			  LookupAccount.add(LookupAcc);\
+        \}\
+        insert LookupAccount;	\
+         //Id recordTypeI = Schema.SObjectType.Lead.getRecordTypeInfosByName().get('VATM').getRecordTypeId();\
+        for(Lead la:getrecordLead)\{\
+         System.debug('la.ConvertedOpportunityId ' + la.ConvertedOpportunityId);\
+                if(la.ConvertedOpportunityId != null)\{\
+                   \
+                    for(Total_Cash_Flow__c t:tcfCash)\{\
+                DealTCF_Link__c DealLink = new DealTCF_Link__c();\
+                				DealLink.Deal__c = la.ConvertedOpportunityId;\
+                				DealLink.Total_Cash_Flow__c = t.Id;\
+                    			DealTcf.add(DealLink);\
+                                \
+                        \}\
+                    \
+                    \
+                /*DealTCF_Link__c DealLink = new DealTCF_Link__c();\
+                				DealLink.Deal__c = la.ConvertedOpportunityId;\
+                				DealLink.Total_Cash_Flow__c =leadTotalCashFlowIdMap.get(la.Id) ;\
+                    			DealTcf.add(DealLink);*/\
+                    \
+                \}\
+                    \
+                   \
+                    if(leadAccountConditionMap.get(la.Id))\{\
+                        \
+                        	   //Id rtIda = [SELECT Id FROM RecordType WHERE IsPersonType = TRUE AND SObjectType='Research__c' LIMIT 1].Id;\
+                               Research__c rsh = new Research__c();\
+                            			rsh.Account__c = la.ConvertedAccountId;\
+                                      \
+                                        system.debug('convertedAccountId' +la.ConvertedAccountId);\
+                                  \
+                                		rsh.RecordTypeId ='0125A000000vDDAQA2';\
+                                		Rsch.add(rsh);\
+                    \}\
+                                          \
+                   //Id rtId = [SELECT Id FROM RecordType WHERE IsPersonType = True AND SObjectType='Account' LIMIT 1].Id;\
+                  \
+                   Account a = new Account();\
+        \
+				   //Account a = new Account(RecordTypeId=recordTypeI);\
+            	  \
+                   a.id = la.ConvertedAccountId;\
+            	  // a.RecordTypeId = recordTypeI;\
+            	  \
+            	   a.Customer_History_Segment__pc ='Prospects (No Known Priors)';\
+                   a.PersonBirthdate = la.DOB__c;\
+                   a.pi__comments__pc = 'Pardot Import';\
+				   updateAccount.add(a);\
+			        System.debug('update Customer Contact');\
+                    \
+            \
+                     /*   else\{\
+                   Account a = new Account();\
+                   a.id = la.ConvertedAccountId;\
+                   a.PersonBirthdate = la.DOB__c;\
+                   a.pi__comments__pc = la.pi__comments__c;\
+				   updateAccount.add(a);\
+			        System.debug('update Customer Contact'); \
+                    \}  */\
+                 \
+        \}\
+        \
+        if(DealTcf.size()>0)\
+            insert DealTcf;\
+        \
+         insert Rsch;\
+        /*try\{\
+            \
+            if(Rsch.size()>0)\
+                 insert Rsch;\
+        \}catch(Exception e)\{\
+            System.debug('error ===> '+e.getMessage());\
+        \}*/\
+       \
+        try\{\
+              update updateAccount;\
+        \}catch(Exception e)\{\
+            System.debug('error ===> '+e.getMessage());\
+        \}\
+      \
+ \
+        //Id devRecordTypeId = Schema.SObjectType.Account.getRecordTypeInfosByName().get('Research - Contact Info').getRecordTypeId();\
+    \}\
+\}}

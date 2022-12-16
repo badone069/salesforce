@@ -1,0 +1,30 @@
+<aura:component controller="ImageController"  implements="force:appHostable,flexipage:availableForAllPageTypes,flexipage:availableForRecordHome,force:hasRecordId,forceCommunity:availableForAllPageTypes,force:lightningQuickAction" access="global" >
+    <lightning:card title="Capture Screen">
+        <lightning:layout horizontalAlign="spread">
+            <lightning:layoutItem padding="around-small">
+                <h1>
+                    MDN - WebRTC: Still photo capture demo
+                </h1>
+                <div class="camera">
+                    <video id="video">Video stream not available.</video>
+                    <button id="startbutton" onclick="{!c.doInit}">Take photo</button> 
+                    <button id="clearbutton" onclick="{!c.doInit}">Clear Photo</button> 
+                </div>
+            </lightning:layoutItem>
+            <lightning:layoutItem padding="around-small">
+                <canvas id="canvas">
+                </canvas>
+            </lightning:layoutItem>
+            <lightning:layoutItem padding="around-small">               
+                <h1>
+                    Captures Image
+                </h1>
+                <div class="output">
+                    <img id="photo"  src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" alt="The screen capture will appear in this box."/> 
+                    <button id="saveButton" onclick="{!c.savePhoto}">Save photo to record</button> 
+                </div>
+            </lightning:layoutItem>
+        </lightning:layout>
+        
+    </lightning:card>
+</aura:component>
